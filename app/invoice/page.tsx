@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { isValidContractNumber, isValidEDRPOU, isValidIBAN, isValidIPN } from '../../lib/validators';
 import ServiceItems, { ServiceItem } from './ServiceItems';
 
 interface FormData {
@@ -30,6 +31,7 @@ export default function InvoicePage() {
     ],
   });
   const [message, setMessage] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value, type } = e.target;
@@ -45,6 +47,26 @@ export default function InvoicePage() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const newErrors: Record<string, string> = {};
+
+    if (!isValidContractNumber(data.invoiceNumber)) {
+      newErrors.invoiceNumber = 'Некоректний номер рахунку (формат NNNN/YY)';
+    }
+
+    if (data.iban && !isValidIBAN(data.iban)) {
+      newErrors.iban = 'Некоректний IBAN';
+    }
+
+    if (data.taxID && !(isValidEDRPOU(data.taxID) || isValidIPN(data.taxID))) {
+      newErrors.taxID = 'Некоректний ЄДРПОУ або ІПН';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
     setMessage('Формується рахунок...');
     try {
       const total = data.items.reduce(
@@ -74,6 +96,9 @@ export default function InvoicePage() {
         <label className="block">
           Номер рахунку:
           <input className="w-full border p-2" name="invoiceNumber" value={data.invoiceNumber} onChange={handleChange} required />
+          {errors.invoiceNumber && (
+            <p className="text-red-600 text-sm">{errors.invoiceNumber}</p>
+          )}
         </label>
         <label className="block">
           Дата:
@@ -90,10 +115,16 @@ export default function InvoicePage() {
         <label className="block">
           ІПН/РНОКПП:
           <input className="w-full border p-2" name="taxID" value={data.taxID} onChange={handleChange} />
+          {errors.taxID && (
+            <p className="text-red-600 text-sm">{errors.taxID}</p>
+          )}
         </label>
         <label className="block">
           IBAN:
           <input className="w-full border p-2" name="iban" value={data.iban} onChange={handleChange} />
+          {errors.iban && (
+            <p className="text-red-600 text-sm">{errors.iban}</p>
+          )}
         </label>
         <label className="block">
           Контактний телефон:

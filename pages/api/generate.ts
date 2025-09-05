@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer';
+import { formatDateUA } from '../../lib/validators';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -18,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       <Page>
         <View style={styles.section}>
           <Text>Invoice Number: {data.invoiceNumber}</Text>
-          <Text>Date: {data.date}</Text>
+          <Text>Date: {formatDateUA(data.date)}</Text>
           <Text>Client: {data.clientName}</Text>
           {data.items?.map((item: any, index: number) => (
             <Text key={index}>
