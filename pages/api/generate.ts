@@ -21,11 +21,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           <Text>Invoice Number: {data.invoiceNumber}</Text>
           <Text>Date: {formatDateUA(data.date)}</Text>
           <Text>Client: {data.clientName}</Text>
-          <Text>Service: {data.service}</Text>
-          <Text>
-            Quantity: {data.quantity} {data.unit}
-          </Text>
-          <Text>Price: {data.price}</Text>
+          {data.items?.map((item: any, index: number) => (
+            <Text key={index}>
+              {item.description}: {item.quantity} {item.unit} x {item.price} ={' '}
+              {item.quantity * item.price}
+            </Text>
+          ))}
           <Text>Total: {data.total}</Text>
         </View>
       </Page>
