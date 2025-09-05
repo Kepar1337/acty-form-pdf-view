@@ -48,13 +48,16 @@ export default function InvoicePage() {
     e.preventDefault();
     setMessage('Формується рахунок...');
     try {
-      const res = await fetch('https://script.google.com/macros/s/AKfycbybysv8cx9j8-X1QazC2VyOnXdWbCySS6q4IN9gXd6lJ5dDfv1mbgJnq8Ou8ztHSEDI0w/exec', {
+      const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      const result = await res.json();
-      setMessage(`✅ Рахунок сформовано. <a href="${result.url}" target="_blank" class="text-blue-600 underline">Переглянути PDF</a>`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      setMessage(
+        `✅ Рахунок сформовано. <a href="${url}" target="_blank" download="invoice.pdf" class="text-blue-600 underline">Завантажити PDF</a>`
+      );
     } catch (err) {
       console.error(err);
       setMessage('❌ Помилка під час створення рахунку.');
