@@ -12,6 +12,7 @@
 </head>
 <body>
   <h1>Форма для створення рахунку</h1>
+  <p id="consent-notice">Введені дані зберігаються локально у вашому браузері для автозаповнення та не передаються третім сторонам.</p>
   <form id="invoice-form">
     <label>Номер рахунку: <input type="text" name="invoiceNumber" required /></label>
     <label>Дата: <input type="date" name="date" required /></label>
@@ -28,12 +29,43 @@
     <label>Сума (грн): <input type="number" name="total" required /></label>
 
     <button type="submit">Сформувати рахунок</button>
+    <button type="button" id="clear-data">Очистити дані</button>
   </form>
 
   <div id="result" style="margin-top:2rem;"></div>
 
   <script>
     const form = document.getElementById('invoice-form');
+    const storageKey = 'invoiceFormData';
+
+    function saveData() {
+      const data = Object.fromEntries(new FormData(form).entries());
+      localStorage.setItem(storageKey, JSON.stringify(data));
+    }
+
+    function loadData() {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const data = JSON.parse(saved);
+        for (const [key, value] of Object.entries(data)) {
+          if (form.elements[key]) {
+            form.elements[key].value = value;
+          }
+        }
+      }
+    }
+
+    function clearData() {
+      localStorage.removeItem(storageKey);
+      form.reset();
+      document.getElementById('result').textContent = '';
+    }
+
+    form.addEventListener('input', saveData);
+    document.getElementById('clear-data').addEventListener('click', clearData);
+
+    loadData();
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
