@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import ServiceItems, { ServiceItem } from './ServiceItems';
 
 interface FormData {
   invoiceNumber: string;
@@ -11,11 +12,7 @@ interface FormData {
   iban: string;
   contact: string;
   email: string;
-  service: string;
-  quantity: number;
-  unit: string;
-  price: number;
-  total: number;
+  items: ServiceItem[];
 }
 
 export default function InvoicePage() {
@@ -28,11 +25,9 @@ export default function InvoicePage() {
     iban: '',
     contact: '',
     email: '',
-    service: '',
-    quantity: 1,
-    unit: 'послуга',
-    price: 0,
-    total: 0,
+    items: [
+      { description: '', quantity: 1, unit: 'послуга', price: 0 },
+    ],
   });
   const [message, setMessage] = useState('');
 
@@ -44,14 +39,22 @@ export default function InvoicePage() {
     }));
   }
 
+  function handleItemsChange(items: ServiceItem[]) {
+    setData((prev) => ({ ...prev, items }));
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setMessage('Формується рахунок...');
     try {
+      const total = data.items.reduce(
+        (sum, item) => sum + item.quantity * item.price,
+        0
+      );
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, total }),
       });
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -100,26 +103,7 @@ export default function InvoicePage() {
           Email:
           <input type="email" className="w-full border p-2" name="email" value={data.email} onChange={handleChange} />
         </label>
-        <label className="block">
-          Найменування послуги:
-          <input className="w-full border p-2" name="service" value={data.service} onChange={handleChange} required />
-        </label>
-        <label className="block">
-          Кількість:
-          <input type="number" className="w-full border p-2" name="quantity" value={data.quantity} onChange={handleChange} required />
-        </label>
-        <label className="block">
-          Одиниця виміру:
-          <input className="w-full border p-2" name="unit" value={data.unit} onChange={handleChange} />
-        </label>
-        <label className="block">
-          Ціна за одиницю (грн):
-          <input type="number" className="w-full border p-2" name="price" value={data.price} onChange={handleChange} required />
-        </label>
-        <label className="block">
-          Сума (грн):
-          <input type="number" className="w-full border p-2" name="total" value={data.total} onChange={handleChange} required />
-        </label>
+        <ServiceItems items={data.items} onChange={handleItemsChange} />
         <button type="submit" className="mt-4 px-4 py-2 bg-blue-600 text-white rounded">Сформувати рахунок</button>
       </form>
       {message && (
