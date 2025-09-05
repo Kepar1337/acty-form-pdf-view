@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import ServiceItems, { ServiceItem } from './ServiceItems';
+import ImageUpload from './ImageUpload';
 
 interface FormData {
   invoiceNumber: string;
@@ -13,6 +14,10 @@ interface FormData {
   contact: string;
   email: string;
   items: ServiceItem[];
+  signature: string | null;
+  stamp: string | null;
+  signerName: string;
+  transliterate: boolean;
 }
 
 export default function InvoicePage() {
@@ -28,15 +33,28 @@ export default function InvoicePage() {
     items: [
       { description: '', quantity: 1, unit: 'послуга', price: 0 },
     ],
+    signature: null,
+    stamp: null,
+    signerName: '',
+    transliterate: false,
   });
   const [message, setMessage] = useState('');
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const { name, value, type } = e.target;
+    const { name, value, type, checked } = e.target;
     setData((prev) => ({
       ...prev,
-      [name]: type === 'number' ? Number(value) : value,
+      [name]:
+        type === 'number'
+          ? Number(value)
+          : type === 'checkbox'
+          ? checked
+          : value,
     }));
+  }
+
+  function handleImageChange(name: 'signature' | 'stamp', value: string | null) {
+    setData((prev) => ({ ...prev, [name]: value }));
   }
 
   function handleItemsChange(items: ServiceItem[]) {
@@ -103,6 +121,16 @@ export default function InvoicePage() {
           Email:
           <input type="email" className="w-full border p-2" name="email" value={data.email} onChange={handleChange} />
         </label>
+        <label className="block">
+          ПІБ підписанта:
+          <input className="w-full border p-2" name="signerName" value={data.signerName} onChange={handleChange} />
+        </label>
+        <label className="inline-flex items-center space-x-2">
+          <input type="checkbox" name="transliterate" checked={data.transliterate} onChange={handleChange} />
+          <span>Транслітерувати ПІБ</span>
+        </label>
+        <ImageUpload label="Підпис" value={data.signature} onChange={(v) => handleImageChange('signature', v)} />
+        <ImageUpload label="Печатка" value={data.stamp} onChange={(v) => handleImageChange('stamp', v)} />
         <ServiceItems items={data.items} onChange={handleItemsChange} />
         <button type="submit" className="mt-4 px-4 py-2 bg-blue-600 text-white rounded">Сформувати рахунок</button>
       </form>
